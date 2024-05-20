@@ -1,0 +1,177 @@
+﻿@{
+	ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center my-4">
+	<h1 class="display-4">Web API Project</h1>
+</div>
+
+<div class="container mt-4">
+	<div class="row mb-3 align-items-center">
+		<div class="col-md-2">
+			<label for="txtName" class="form-label">Name</label>
+		</div>
+		<div class="col-md-4">
+			<input class="form-control" type="text" id="txtName" placeholder="Enter Name" />
+		</div>
+		<div class="col-md-2">
+			<label for="txtPrice" class="form-label">Price</label>
+		</div>
+		<div class="col-md-4">
+			<input class="form-control" type="number" id="txtPrice" placeholder="Enter Price" />
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col text-center">
+			<button class="btn btn-primary mx-1" onclick="createProduct()">Add</button>
+			<button class="btn btn-outline-primary mx-1" onclick="updateProduct()">Update</button>
+			<button class="btn btn-danger mx-1" onclick="clearForm()">Clear</button>
+		</div>
+	</div>
+</div>
+
+<div class="container mt-4">
+	<table class="table table-hover" id="tblProducts">
+		<thead>
+			<tr>
+				<th>#</th>
+				<th>Name</th>
+				<th>Price</th>
+				<th>Actions</th>
+			</tr>
+		</thead>
+		<tbody id="tblBody">
+		</tbody>
+	</table>
+</div>
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script>
+
+	$(document).ready(function () {
+		getDetails();
+	});
+
+	var productId;
+
+	function getDetails() {
+		var options = {
+			url: "http://localhost:5093/api/Product/",
+			type: "GET",
+			contentType: "application/json",
+			dataType: "json",
+			success: function (msg) {
+				$('#tblBody').empty();
+				if (msg !== undefined && msg !== null) {
+					for (let i = 0; i < msg.length; i++) {
+						var row = "<tr>";
+						row += "<td>" + (i + 1) + "</td>";
+						row += "<td>" + msg[i].name + "</td>";
+						row += "<td>" + msg[i].price + "</td>";
+						row += "<td><button class='btn btn-primary' onclick='onEdit(" + msg[i].id + ")'>Edit</button> ";
+						row += "<button class='btn btn-danger' onclick='onDelete(" + msg[i].id + ")'>Delete</button></td>";
+						row += "</tr>";
+						$('#tblBody').append(row);
+					}
+				}
+			},
+			error: function () {
+				console.log("Error while calling Web Api");
+			}
+		};
+		$.ajax(options);
+	}
+
+	function createProduct() {
+		var options = {
+			url: "http://localhost:5093/api/Product/",
+			type: "POST",
+			contentType: "application/json",
+			dataType: "html",
+			data: JSON.stringify({
+				Name: $("#txtName").val(),
+				Price: $("#txtPrice").val()
+			}),
+			success: function (msg) {
+				console.log(msg);
+				clearForm();
+				alert("Record Added");
+				getDetails();
+			},
+			error: function () {
+				console.log("Error while creating Web Api");
+			}
+		};
+		$.ajax(options);
+	}
+
+	function onEdit(id) {
+		productId = id;
+		var options = {
+			url: "http://localhost:5093/api/Product/" + id,
+			type: "GET",
+			success: function (msg) {
+				console.log(msg);
+				if (msg !== undefined && msg !== null) {
+					$("#txtName").val(msg.name);
+					$("#txtPrice").val(msg.price);
+				}
+			},
+			error: function () {
+				console.log("Error while calling onEdit(id)");
+			}
+		};
+		$.ajax(options);
+	}
+
+	function updateProduct() {
+		var options = {
+			url: "http://localhost:5093/api/Product/" + productId,
+			type: "PUT",
+			contentType: "application/json",
+			dataType: "html",
+			data: JSON.stringify({
+				Id: productId,
+				Name: $("#txtName").val(),
+				Price: $("#txtPrice").val()
+			}),
+			success: function (msg) {
+				console.log(msg);
+				clearForm();
+				alert("Record Updated");
+				getDetails();
+			},
+			error: function () {
+				console.log("Error while updating Web Api");
+			}
+		};
+		$.ajax(options);
+	}
+
+	function onDelete(id) {
+		if (window.confirm("Are you sure you want to delete this?")) {
+			var options = {
+				url: "http://localhost:5093/api/Product/" + id,
+				type: "DELETE",
+				success: function (msg) {
+					console.log(msg);
+					if (msg !== undefined && msg !== null) {
+						clearForm();
+						getDetails();
+						alert("Record Deleted");
+					}
+				},
+				error: function () {
+					console.log("Error while deleting in Web Api");
+				}
+			};
+			$.ajax(options);
+		}
+	}
+
+	function clearForm() {
+		$("#txtName").val('');
+		$("#txtPrice").val('');
+	}
+</script>
